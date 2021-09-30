@@ -1,36 +1,33 @@
 package eu.themaxik.rasputin;
 
 import eu.themaxik.rasputin.classes.Threader;
-import eu.themaxik.rasputin.util.GarbageCounter;
+import eu.themaxik.rasputin.util.Config;
 import eu.themaxik.rasputin.util.IPGenerator;
-import eu.themaxik.rasputin.util.MysqlConnector;
-import eu.themaxik.rasputin.util.RedisConnector;
+import eu.themaxik.rasputin.db.MysqlConnector;
+import lombok.Getter;
 
 
 public class Rasputin {
-
-    private static MysqlConnector Mysqlconnector;
-    private static RedisConnector redisConnector;
-    private static IPGenerator ipGenerator;
-
-    private static GarbageCounter garbageCounter;
-    private static int garbageLimit = 2000;
+    @Getter
+    private static boolean end = false;
 
     public static void main(String[] args) {
-        if(args.length < 1){
-            System.out.println("Rasputin.Jar <Threads> [GargabeLimit = 2000]");
-            return;
-        }
-        if(args.length > 1){
-            garbageLimit = Integer.parseInt(args[1]);
-        }
-        //Mysqlconnector = new MysqlConnector("localhost", 3306, "root", "", "rasputin");
-        Mysqlconnector = new MysqlConnector("localhost", 3306, "root", "6cs*49wrW!6Nd<qb", "rasputin");
-        redisConnector = new RedisConnector("localhost");
-        garbageCounter = new GarbageCounter(garbageLimit);
-        ipGenerator = new IPGenerator(redisConnector);
-        for(int i = 0; i < Integer.parseInt(args[0]); i++){
-            Threader t = new Threader("" + i,ipGenerator,Mysqlconnector);
+        Config config = new Config();
+        String startIP = config.getSetting("rasputin.startip").toString();
+        String endIP = config.getSetting("rasputin.endip").toString();
+
+        String host = config.getSetting("mysql.host").toString();
+        int port = Integer.parseInt(config.getSetting("mysql.port").toString());
+        String user = config.getSetting("mysql.user").toString();
+        String password = config.getSetting("mysql.password").toString();
+        String db = config.getSetting("mysql.db").toString();
+        MysqlConnector mysqlconnector = new MysqlConnector(host, port, user, password, db);
+
+        int threads = Integer.parseInt(config.getSetting("rasputin.threads").toString());
+
+        IPGenerator ipGenerator = new IPGenerator(startIP, endIP);
+        for(int i = 0; i < threads; i++){
+            Threader t = new Threader("" + i, ipGenerator, mysqlconnector);
             t.start();
         }
     }
