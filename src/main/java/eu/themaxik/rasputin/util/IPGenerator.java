@@ -1,58 +1,64 @@
 package eu.themaxik.rasputin.util;
 
 
+import eu.themaxik.rasputin.Rasputin;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
+
+import java.util.*;
+
 public class IPGenerator {
 
-    private String lastIP;
-    private String endIP;
+    private Jedis jedis;
+    private ArrayList<String> cache = new ArrayList<>();
+    private int threads;
 
-
-
-    public IPGenerator(String startIP, String endIP){
-        this.lastIP = startIP;
-        this.endIP = endIP;
+    public IPGenerator(String host, int threads) {
+        System.out.println("Connecting to Redis");
+        this.jedis = new Jedis("34.125.204.226");
+        System.out.println(PrompColor.ANSI_GREEN + "Redis connected to " + host);
+        this.threads = threads;
     }
 
 
     public String getIp() {
-        String ip = lastIP;
-        if(lastIP.equals(endIP) || lastIP == null){
-            return null;
+
+        if(!cache.isEmpty()){
+            String s = cache.get(0);
+            cache.remove(s);
+            return s;
         }
-        String[] nums = ip.split("\\.");
-        int i = (Integer.parseInt(nums[0]) << 24 | Integer.parseInt(nums[2]) << 8
-                |  Integer.parseInt(nums[1]) << 16 | Integer.parseInt(nums[3])) + 1;
 
-        // If you wish to skip over .255 addresses.
-        if ((byte) i == -1) i++;
+        getIpsFromRedis();
 
-        lastIP = String.format("%d.%d.%d.%d", i >>> 24 & 0xFF, i >> 16 & 0xFF,
-                i >>   8 & 0xFF, i >>  0 & 0xFF);
-        lastIP = checkIfPrivate(lastIP);
-        return lastIP;
+        if(!cache.isEmpty()){
+            String s = cache.get(0);
+            cache.remove(s);
+            return s;
+        }
+
+        //REDIS EMTPY or smth
+        System.out.println(PrompColor.ANSI_RED + "!!!REDIS LOOKS EMPTY!!!");
+        return null;
     }
 
-    //Returns the ip unchanged if not local
-    //Returns the next available ip if local
-    private String checkIfPrivate(String ip){
-        String[] nums = ip.split("\\.");
-        if(nums[0].equals("10")){
-            return "11.1.1.1";
+    private void getIpsFromRedis() {
+        System.out.println("Loading keys from Redis!");
+        int limit = threads;
+        if(jedis.dbSize() < threads){
+            limit = Integer.parseInt(jedis.dbSize().toString());
         }
-        if(nums[0].equals("172")){
-            int second = Integer.parseInt(nums[1]);
-            if(second >= 16 && second <= 31){
-                return "172.32.1.1";
-            }
+        int i = 0;
+        Set<String> allAvailableKeys = jedis.keys("*");
+        Iterator<String> iterator = allAvailableKeys.iterator();
+        while (iterator.hasNext() && i < limit) {
+            String key= iterator.next();
+            cache.add(key);
+            i++;
         }
-        if(nums[0].equals("192") && nums[1].equals("168")){
-            return "192.169.1.1";
-        }
-        if(nums[0].equals("224")){
-            System.out.println("The next ip (" + ip + ") looks like the end");
-            return null;
-        }
-        return ip;
+        jedis.del(cache.toArray(new String[cache.size()]));
     }
+
 
 }
