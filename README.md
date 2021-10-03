@@ -15,5 +15,4 @@ How to use:
        1.Build or Download Rasputin.jar
        2.Run Rasputin.jar and wait until it crashes.
        3.Edit the Config.yml that was created.
-       
-       Have fun
+       4.           Have fun
