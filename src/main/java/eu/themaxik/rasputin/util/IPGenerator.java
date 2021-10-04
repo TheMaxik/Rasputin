@@ -16,7 +16,7 @@ public class IPGenerator {
 
     public IPGenerator(String host, int threads) {
         System.out.println("Connecting to Redis");
-        this.jedis = new Jedis("34.125.204.226");
+        this.jedis = new Jedis(host);
         System.out.println(PrompColor.ANSI_GREEN + "Redis connected to " + host);
         this.threads = threads;
     }

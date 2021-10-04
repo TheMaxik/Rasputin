@@ -23,7 +23,7 @@ public class Rasputin {
     public static void main(String[] args) {
         Config config = new Config();
         threads = Integer.parseInt(config.getSetting("rasputin.threads").toString());
-        ipGenerator = new IPGenerator(config.getSetting("mysql.host").toString(), threads); //TODO ADD CONFIG FOR REDIS
+        ipGenerator = new IPGenerator(config.getSetting("mysql.host").toString(), threads);
 
         String host = config.getSetting("mysql.host").toString();
         int port = Integer.parseInt(config.getSetting("mysql.port").toString());
