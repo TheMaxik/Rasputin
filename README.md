@@ -2,6 +2,7 @@ Rasputin is a tool that allows you to find any publicly available Minecraft serv
 <br>
 <br>
 First i tried to use this on my local machine but i got told that it would take forever - and it did.
+Also it crashed my network if i used to many workers :D
 <br>
 So i used Redis made it to work with on multiple instances. Maybe even docker?
 <br>
